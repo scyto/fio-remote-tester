@@ -1,0 +1,11 @@
+📊 FIO Summary
+🕒 Timestamp: 2025-04-30_16-03-13
+📂 Tested path: /Users/alex/fio-remote-tester
+📄 Profile: webserver
+
+| Test        | Read MB/s  | Write MB/s | Read IOPS | Write IOPS |
+|-------------|------------|------------|-----------|------------|
+| randread    | 113MiB/s   | 36.3MiB/s  | 29.0k     | 9302       |
+| randwrite   | 170MiB/s   | 36.3MiB/s  | 10.9k     | 9302       |
+| randrw      | 170MiB/s   | 19.0MiB/s  | 10.9k     | 1215       |
+| seqread     | 1213MiB/s  | 0          | 2426      | -          |

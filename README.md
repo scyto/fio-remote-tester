@@ -1,47 +1,78 @@
-# FIO Remote Share I/O Tester
+# 🚀 FIO Remote Share I/O Tester
 
-A lightweight Bash tool for non-destructive benchmarking of remote filesystems using `fio`.
+A Bash script to benchmark remote or local filesystems using `fio`. Generates results in plain text, CSV, Markdown, and HTML.
 
-## Features
+---
 
-- Runs safe, minimal `fio` read/write tests
-- Supports CSV, Markdown, and HTML report output
-- Automatically logs timestamp and tested path
-- Friendly CLI with `--help`
-- Output filenames are timestamped for historical comparison
+## 🛠️ Requirements
 
-## Requirements
+- `fio` (install via `sudo apt install fio`)
+- Bash shell
 
-- Linux system with `fio` installed
-  ```bash
-  sudo apt install fio
-  ```
+---
 
-## Usage
+## 📦 Usage
 
 ```bash
-./io-test.sh /mnt/cephfs --output csv markdown html
+./io-test.sh /mount/point [--profile PROFILE] [--output FORMAT...]
 ```
 
-### Options
+### Examples
 
-| Flag           | Description                                 |
-|----------------|---------------------------------------------|
-| `/path/to/test`| Directory to benchmark                      |
-| `--output`     | Followed by any of: `csv`, `markdown`, `html` |
-| `--help`, `-h` | Show usage and examples                     |
+```bash
+# Run default tests with markdown and HTML output
+./io-test.sh /mnt/cephfs --output markdown html
 
-## Sample Output
+# Test with VM workload and CSV output
+./io-test.sh /mnt/cephfs --profile vm --output csv
+
+# All formats
+./io-test.sh /mnt/cephfs --profile stress --output markdown html csv
+```
+
+---
+
+## 📋 Profiles
+
+| Profile    | Description                                      |
+|------------|--------------------------------------------------|
+| `default`  | Basic seq read/write and mixed random workload   |
+| `balanced` | Mixed I/O depths and block sizes for general use |
+| `vm`       | Emulates virtual machine disk patterns           |
+| `webserver`| I/O pattern optimized for web workloads          |
+| `stress`   | Heavy random mixed reads/writes                  |
+
+---
+
+## 📤 Output
+
+Each run generates:
+
+- `fio-results-<timestamp>.log` – full raw log
+- `fio-summary-<timestamp>.txt` – readable table
+- `fio-summary-<timestamp>.csv` – for Excel/Google Sheets
+- `fio-summary-<timestamp>.md` – for GitHub-style Markdown
+- `fio-summary-<timestamp>.html` – for direct browser viewing
+
+---
+
+## 📎 Sample Markdown Output
 
 ```
-📊 Summary (from fio-results-2025-04-30_14-10-12.log):
 | Test        | Read MB/s  | Write MB/s | Read IOPS | Write IOPS |
 |-------------|------------|------------|-----------|------------|
-| seqwrite    | 0          | 424MiB/s   | -         | 424        |
-| seqread     | 448MiB/s   | 0          | 448       | -          |
-| randrw      | 12.0MiB/s  | 5264KiB/s  | 3072      | 1316       |
+| seqread     | 431MiB/s   | 0          | 110335    | -          |
+| seqwrite    | 0          | 393MiB/s   | -         | 100608     |
 ```
 
-## License
+---
 
-[MIT](LICENSE)
+## 🧹 Clean-Up
+
+Temporary files are deleted after each run. Only summaries and logs are retained.
+
+---
+
+## 🧑‍💻 Author
+
+Created by [You]. Contributions welcome!
