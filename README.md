@@ -36,10 +36,12 @@ cd ~ && wget https://raw.githubusercontent.com/scyto/fio-test-script/refs/heads/
 
 > ⚠️ `--clear-cache` requires root privileges (`sudo`).
 
-## 📂 Profiles
+## 📂 Workload Profiles
 You can specify the following `--profiles` if no profile is specified then default will be used
 
 ### 📊 I/O Profile Summary
+A  note on these profiles, i am not actuallu claiming ANY of these are good or representative of real workloads, if you want to see the exact params please look in the code.
+I may take suggestions on tweaking these to make the test params more representative of a real workload.  For now these are what chatGPT generated for me.
 
 | Profile     | 🧠 Purpose                       | ⚙️ Workload Pattern & Key Params                              | ✅ Best Suited For                  |
 |-------------|----------------------------------|---------------------------------------------------------------|-------------------------------------|
@@ -98,3 +100,9 @@ If the `--output none` flag is used:
 - Timestamp format: `YYYY-MM-DD_HH-MM-SS`
 - Files are created in the **current working directory** (not the test target directory)
 - The test files themselves (`testfile-*.tmp`) are automatically removed after each run
+
+# Use of AI
+I am not a programmer, lilke not in the least.  The script was 100% created with AI.  The README.md about 75% with AI.
+It wasn't painfree and took around 5 hours.  Much of this time me arguing with chatGPT that the zip files it kept gving me only contained truncated versions of files.  I made it pink swear it would stop doing that, it kept breaking that promise. towards the end i would use github copilot to validate changes chatgpt was telling me to do based on my request for change or a new requirement.  I am impressed with what i ended up with, espeically with all the error handling for bad command line syntax of options.  It even handles dumb cases like still telling you help if you do --someoption --help. 
+
+If folks what to see where this started here is the initial chat, i had to more seperate chats when this chat became unreliable https://chatgpt.com/share/6812d574-f220-800d-bfe6-33110eace4cb 
