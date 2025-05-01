@@ -1,4 +1,4 @@
-# 📘 FIO Remote Share I/O Tester
+# 📘 FIO I/O - Repeatable Simplified Test Script
 
 A flexible and cache-aware benchmark script for storage shares using `fio`.
 
