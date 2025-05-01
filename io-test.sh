@@ -199,6 +199,11 @@ run_profile() {
   echo "🕒 Timestamp: $TIMESTAMP"
   echo "📂 Tested path: $TEST_ABS_PATH"
   echo "📄 Profile: $PROFILE"
+    if $CLEAR_CACHE; then
+    echo "🧹 Cache clearing: Enabled"
+  else
+    echo "🧹 Cache clearing: Disabled"
+  fi
   echo ""
   printf "| %-14s | %-10s | %-10s | %-9s | %-10s |\n" "Test" "Read MB/s" "Write MB/s" "Read IOPS" "Write IOPS"
   echo "|----------------|------------|------------|-----------|------------|"
@@ -210,6 +215,11 @@ $OUTPUT_MD && {
   echo "- Timestamp: \`$TIMESTAMP\`" >> "$SUMMARY_MD"
   echo "- Tested Path: \`$TEST_ABS_PATH\`" >> "$SUMMARY_MD"
   echo "- Profile: \`$PROFILE\`" >> "$SUMMARY_MD"
+    if $CLEAR_CACHE; then
+    echo "- Cache Clearing: \`Enabled\`" >> "$SUMMARY_MD"
+  else
+    echo "- Cache Clearing: \`Disabled\`" >> "$SUMMARY_MD"
+  fi
   echo "" >> "$SUMMARY_MD"
   echo "| Test           | Read MB/s  | Write MB/s | Read IOPS | Write IOPS |" >> "$SUMMARY_MD"
   echo "|----------------|------------|------------|-----------|------------|" >> "$SUMMARY_MD"
@@ -219,6 +229,11 @@ $OUTPUT_HTML && {
   echo "Tested path: <code>$TEST_ABS_PATH</code><br>" >> "$SUMMARY_HTML"
   echo "Timestamp: <code>$TIMESTAMP</code><br>" >> "$SUMMARY_HTML"
   echo "Profile: <code>$PROFILE</code></p>" >> "$SUMMARY_HTML"
+    if $CLEAR_CACHE; then
+        echo "<p>Cache clearing: <strong>Enabled</strong></p>" >> "$SUMMARY_HTML"
+    else
+        echo "<p>Cache clearing: <strong>Disabled</strong></p>" >> "$SUMMARY_HTML"
+    fi
   echo "<table><thead><tr><th>Test</th><th>Read MB/s</th><th>Write MB/s</th><th>Read IOPS</th><th>Write IOPS</th></tr></thead><tbody>" >> "$SUMMARY_HTML"
 }
 
@@ -239,7 +254,7 @@ parse_human_metrics() {
 
     printf "| %-14s | %-10s | %-10s | %-9s | %-10s |\n" \
         "$TEST" "${READ_BW:-0}" "${WRITE_BW:-0}" "${READ_IOPS:--}" "${WRITE_IOPS:--}" >> "$SUMMARY_TXT"
-    $OUTPUT_CSV && echo "$TEST,$READ_BW,$WRITE_BW,$READ_IOPS,$WRITE_IOPS,$TEST_ABS_PATH,$TIMESTAMP,$PROFILE" >> "$SUMMARY_CSV"
+    $OUTPUT_CSV && echo "$TEST,$READ_BW,$WRITE_BW,$READ_IOPS,$WRITE_IOPS,$TEST_ABS_PATH,$TIMESTAMP,$PROFILE,$([[ $CLEAR_CACHE == true ]] && echo 'Enabled' || echo 'Disabled')" >> "$SUMMARY_CSV"
     $OUTPUT_MD && printf "| %-14s | %-10s | %-10s | %-9s | %-10s |\n" "$TEST" "$READ_BW" "$WRITE_BW" "$READ_IOPS" "$WRITE_IOPS" >> "$SUMMARY_MD"
     $OUTPUT_HTML && echo "<tr><td>$TEST</td><td>$READ_BW</td><td>$WRITE_BW</td><td>$READ_IOPS</td><td>$WRITE_IOPS</td></tr>" >> "$SUMMARY_HTML"
 }
