@@ -6,21 +6,20 @@ cat <<EOF
 📘 FIO Remote Share I/O Tester
 
 Usage:
-  ./io-test.sh /path/to/mount --profile [default|balanced|vm|webserver|stress] --output [csv markdown html]
+  ./io-test.sh /path/to/mount --profile [default|balanced|vm|webserver|stress] --output [csv markdown html] [--clear-cache]
 
 Examples:
-  ./io-test.sh ./mnt/testshare --profile balanced --output csv markdown
-  ./io-test.sh /mnt/cephfs --output html
+  ./io-test.sh ./mnt/share --profile vm --output markdown --clear-cache
 
 Options:
   --profile default|balanced|vm|webserver|stress  Select a predefined I/O workload profile
   --output csv markdown html                      Output one or more formats
+  --clear-cache                                   Clear Linux disk caches before each test (requires root)
   -h, --help                                      Show this help message
-
 EOF
 }
 
-# === Handle --help or missing path ===
+# === Handle help or missing path ===
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
     show_help
     exit 0
@@ -35,45 +34,58 @@ fi
 TEST_DIR="$1"
 shift
 
-# Output format flags
 OUTPUT_CSV=false
 OUTPUT_MD=false
 OUTPUT_HTML=false
+CLEAR_CACHE=false
 PROFILE="default"
 
-# === Parse arguments ===
+VALID_PROFILES=(default balanced vm webserver stress)
+VALID_OUTPUTS=(csv markdown html)
+
 while [[ "$#" -gt 0 ]]; do
     case "$1" in
         --output)
             shift
             while [[ "$#" -gt 0 && ! "$1" =~ ^-- ]]; do
-                case "$1" in
-                    csv) OUTPUT_CSV=true ;;
-                    markdown) OUTPUT_MD=true ;;
-                    html) OUTPUT_HTML=true ;;
-                    *) echo "❌ Unknown output format: $1"; exit 1 ;;
-                esac
+                if [[ " ${VALID_OUTPUTS[*]} " =~ " $1 " ]]; then
+                    [[ "$1" == "csv" ]] && OUTPUT_CSV=true
+                    [[ "$1" == "markdown" ]] && OUTPUT_MD=true
+                    [[ "$1" == "html" ]] && OUTPUT_HTML=true
+                else
+                    echo "❌ Unknown output format: $1"
+                    echo "✅ Valid output formats: ${VALID_OUTPUTS[*]}"
+                    exit 1
+                fi
                 shift
             done
             ;;
         --profile)
             shift
-            case "$1" in
-                default|balanced|vm|webserver|stress) PROFILE="$1" ;;
-                *) echo "❌ Unknown profile: $1"; echo "✅ Supported: default, balanced, vm, webserver, stress"; exit 1 ;;
-            esac
+            if [[ " ${VALID_PROFILES[*]} " =~ " $1 " ]]; then
+                PROFILE="$1"
+            else
+                echo "❌ Unknown profile: $1"
+                echo "✅ Valid profiles: ${VALID_PROFILES[*]}"
+                exit 1
+            fi
             shift
             ;;
-        *) echo "❌ Unknown argument: $1"; echo "✅ Run with --help for usage."; exit 1 ;;
+        --clear-cache)
+            CLEAR_CACHE=true
+            shift
+            ;;
+        *)
+            echo "❌ Unknown argument: $1"
+            echo "✅ Run with --help for usage instructions."
+            exit 1
+            ;;
     esac
 done
 
-# Timestamp and path
+
 TIMESTAMP=$(date '+%Y-%m-%d_%H-%M-%S')
 TEST_ABS_PATH=$(realpath "$TEST_DIR")
-
-# Output filenames
-TEST_FILE="$TEST_DIR/testfile.tmp"
 LOG_FILE="fio-results-$TIMESTAMP.log"
 SUMMARY_TXT="fio-summary-$TIMESTAMP.txt"
 SUMMARY_CSV="fio-summary-$TIMESTAMP.csv"
@@ -81,9 +93,10 @@ SUMMARY_MD="fio-summary-$TIMESTAMP.md"
 SUMMARY_HTML="fio-summary-$TIMESTAMP.html"
 
 echo "📁 Running tests in: $TEST_ABS_PATH" | tee "$LOG_FILE"
-echo "🧪 Temporary test file: $TEST_FILE" | tee -a "$LOG_FILE"
+echo "🧪 Temporary test files in: $TEST_ABS_PATH" | tee -a "$LOG_FILE"
 echo "📄 Logging to: $LOG_FILE"
 echo "📄 Profile selected: $PROFILE"
+$CLEAR_CACHE && echo "🧹 Disk cache clearing enabled before each test" | tee -a "$LOG_FILE"
 echo | tee -a "$LOG_FILE"
 
 if ! command -v fio >/dev/null; then
@@ -95,58 +108,66 @@ cd "$TEST_DIR" || { echo "❌ Could not access $TEST_DIR"; exit 1; }
 
 TEST_NAMES=()
 
+clear_caches() {
+    echo "🧹 Clearing disk caches..." | tee -a "$LOG_FILE"
+    sync
+    echo 3 > /proc/sys/vm/drop_caches
+}
+
 run_test() {
     local NAME="$1"
-    TEST_NAMES+=("$NAME")
+    local FILE="$TEST_DIR/testfile-$NAME.tmp"
     shift
+    TEST_NAMES+=("$NAME")
+    $CLEAR_CACHE && clear_caches
     echo "🚀 Running: $NAME" | tee -a "$LOG_FILE"
-    fio --name="$NAME" --filename="$TEST_FILE" --size="512M" "$@" --output-format=normal >> "$LOG_FILE" 2>&1
+    fio --name="$NAME" --filename="$FILE" --size=512M --overwrite=1 --output-format=normal "$@" >> "$LOG_FILE" 2>&1
     echo | tee -a "$LOG_FILE"
 }
 
 run_profile() {
     case "$PROFILE" in
         default)
-            run_test seqwrite --bs=1M --rw=write --iodepth=1 --direct=1
-            run_test seqread  --bs=1M --rw=read  --iodepth=1 --direct=1
-            run_test randrw   --bs=4k --rw=randrw --rwmixread=70 --iodepth=4 --direct=1
+            run_test seqwrite-1M --rw=write --bs=1M --iodepth=1 --direct=1
+            run_test seqread-1M  --rw=read  --bs=1M --iodepth=1 --direct=1
+            run_test randrw-4k   --rw=randrw --bs=4k --rwmixread=70 --iodepth=4 --direct=1
             ;;
         balanced)
-            run_test seqwrite --bs=1M --rw=write --iodepth=2 --direct=1
-            run_test randread --bs=4k --rw=randread --iodepth=16 --direct=1
-            run_test randrw   --bs=16k --rw=randrw --rwmixread=70 --iodepth=8 --direct=1
-            run_test seqread  --bs=4M --rw=read --iodepth=2 --direct=1
+            run_test seqwrite-1M --rw=write --bs=1M --iodepth=2 --direct=1
+            run_test randread-4k --rw=randread --bs=4k --iodepth=16 --direct=1
+            run_test randrw-16k  --rw=randrw --bs=16k --rwmixread=70 --iodepth=8 --direct=1
+            run_test seqread-4M  --rw=read --bs=4M --iodepth=2 --direct=1
             ;;
         vm)
-            run_test randread  --bs=8k  --rw=randread  --iodepth=32 --direct=1
-            run_test randwrite --bs=8k  --rw=randwrite --iodepth=32 --direct=1
-            run_test randrw    --bs=16k --rw=randrw    --rwmixread=70 --iodepth=16 --direct=1
-            run_test seqread   --bs=1M  --rw=read      --iodepth=2   --direct=1
+            run_test randread-8k  --rw=randread --bs=8k  --iodepth=32 --direct=1
+            run_test randwrite-8k --rw=randwrite --bs=8k  --iodepth=32 --direct=1
+            run_test randrw-16k   --rw=randrw --bs=16k --rwmixread=70 --iodepth=16 --direct=1
+            run_test seqread-1M   --rw=read --bs=1M  --iodepth=2 --direct=1
             ;;
         webserver)
-            run_test randread  --bs=4k  --rw=randread  --iodepth=64 --direct=1
-            run_test randwrite --bs=4k  --rw=randwrite --iodepth=64 --direct=1
-            run_test randrw    --bs=16k --rw=randrw    --rwmixread=90 --iodepth=32 --direct=1
-            run_test seqread   --bs=512k --rw=read     --iodepth=4  --direct=1
+            run_test randread-4k  --rw=randread --bs=4k  --iodepth=64 --direct=1
+            run_test randwrite-4k --rw=randwrite --bs=4k  --iodepth=64 --direct=1
+            run_test randrw-16k   --rw=randrw --bs=16k --rwmixread=90 --iodepth=32 --direct=1
+            run_test seqread-512k --rw=read --bs=512k --iodepth=4 --direct=1
             ;;
         stress)
-            run_test randrw    --bs=4k   --rw=randrw    --rwmixread=50 --iodepth=64 --direct=1
-            run_test randrw    --bs=64k  --rw=randrw    --rwmixread=50 --iodepth=64 --direct=1
-            run_test randwrite --bs=1M   --rw=randwrite --iodepth=32 --direct=1
-            run_test randread  --bs=1M   --rw=randread  --iodepth=32 --direct=1
+            run_test randrw-4k    --rw=randrw --bs=4k --rwmixread=50 --iodepth=64 --direct=1
+            run_test randrw-64k   --rw=randrw --bs=64k --rwmixread=50 --iodepth=64 --direct=1
+            run_test randwrite-1M --rw=randwrite --bs=1M --iodepth=32 --direct=1
+            run_test randread-1M  --rw=randread  --bs=1M --iodepth=32 --direct=1
             ;;
     esac
 }
 
-# === Output headers ===
+# Header output
 {
   echo "📊 FIO Summary"
   echo "🕒 Timestamp: $TIMESTAMP"
   echo "📂 Tested path: $TEST_ABS_PATH"
   echo "📄 Profile: $PROFILE"
   echo ""
-  printf "| %-11s | %-10s | %-10s | %-9s | %-10s |\n" "Test" "Read MB/s" "Write MB/s" "Read IOPS" "Write IOPS"
-  echo "|-------------|------------|------------|-----------|------------|"
+  printf "| %-14s | %-10s | %-10s | %-9s | %-10s |\n" "Test" "Read MB/s" "Write MB/s" "Read IOPS" "Write IOPS"
+  echo "|----------------|------------|------------|-----------|------------|"
 } > "$SUMMARY_TXT"
 
 $OUTPUT_CSV && echo "Test,Read MB/s,Write MB/s,Read IOPS,Write IOPS,Path,Timestamp,Profile" > "$SUMMARY_CSV"
@@ -156,8 +177,8 @@ $OUTPUT_MD && {
   echo "- Tested Path: \`$TEST_ABS_PATH\`" >> "$SUMMARY_MD"
   echo "- Profile: \`$PROFILE\`" >> "$SUMMARY_MD"
   echo "" >> "$SUMMARY_MD"
-  echo "| Test        | Read MB/s  | Write MB/s | Read IOPS | Write IOPS |" >> "$SUMMARY_MD"
-  echo "|-------------|------------|------------|-----------|------------|" >> "$SUMMARY_MD"
+  echo "| Test           | Read MB/s  | Write MB/s | Read IOPS | Write IOPS |" >> "$SUMMARY_MD"
+  echo "|----------------|------------|------------|-----------|------------|" >> "$SUMMARY_MD"
 }
 $OUTPUT_HTML && {
   echo "<p><strong>FIO Test Summary</strong><br>" > "$SUMMARY_HTML"
@@ -167,59 +188,39 @@ $OUTPUT_HTML && {
   echo "<table><thead><tr><th>Test</th><th>Read MB/s</th><th>Write MB/s</th><th>Read IOPS</th><th>Write IOPS</th></tr></thead><tbody>" >> "$SUMMARY_HTML"
 }
 
-# === Metrics parser (corrected) ===
 parse_human_metrics() {
     local TEST="$1"
-    local CHUNK
-    local READ_BW="0" WRITE_BW="0" READ_IOPS="-" WRITE_IOPS="-"
-    local BS_BYTES=4096
-
-    # Extract the chunk from '🚀 Running: $TEST' until the next '🚀 Running:' or EOF
+    local CHUNK RW_MODE READ_BW WRITE_BW READ_IOPS WRITE_IOPS
     CHUNK=$(awk "/🚀 Running: $TEST/,/🚀 Running: /" "$LOG_FILE" | head -n -1)
+    [[ -z "$CHUNK" ]] && CHUNK=$(awk "/🚀 Running: $TEST/,/Cleaning up.../" "$LOG_FILE")
 
-    # Special case for last block (no trailing marker)
-    if [[ -z "$CHUNK" ]]; then
-        CHUNK=$(awk "/🚀 Running: $TEST/,/Cleaning up.../" "$LOG_FILE")
-    fi
+    RW_MODE=$(echo "$CHUNK" | grep -Eo 'rw=(read|write|randread|randwrite|randrw)' | head -n1 | cut -d= -f2)
+    READ_BW=$(echo "$CHUNK" | grep -i 'read:' | sed -n 's/.*bw=\([^, ]*\).*/\1/p' | head -n1)
+    WRITE_BW=$(echo "$CHUNK" | grep -i 'write:' | sed -n 's/.*bw=\([^, ]*\).*/\1/p' | head -n1)
+    READ_IOPS=$(echo "$CHUNK" | grep -i 'read:' | sed -n 's/.*IOPS=\([^, ]*\).*/\1/p' | head -n1)
+    WRITE_IOPS=$(echo "$CHUNK" | grep -i 'write:' | sed -n 's/.*IOPS=\([^, ]*\).*/\1/p' | head -n1)
 
-    # Extract bandwidth and IOPS from lowercase 'read:' and 'write:'
-    READ_BW=$(echo "$CHUNK" | grep -i 'read:' | sed -n 's/.*bw=\([^, ]*\).*/\1/p' | head -n 1)
-    WRITE_BW=$(echo "$CHUNK" | grep -i 'write:' | sed -n 's/.*bw=\([^, ]*\).*/\1/p' | head -n 1)
-    READ_IOPS=$(echo "$CHUNK" | grep -i 'read:' | sed -n 's/.*IOPS=\([^, ]*\).*/\1/p' | head -n 1)
-    WRITE_IOPS=$(echo "$CHUNK" | grep -i 'write:' | sed -n 's/.*IOPS=\([^, ]*\).*/\1/p' | head -n 1)
+    [[ "$RW_MODE" =~ ^write|randwrite$ ]] && READ_BW="0" READ_IOPS="-"
+    [[ "$RW_MODE" =~ ^read|randread$ ]]   && WRITE_BW="0" WRITE_IOPS="-"
 
-    # Fallbacks
-    READ_BW=${READ_BW:-0}
-    WRITE_BW=${WRITE_BW:-0}
-    READ_IOPS=${READ_IOPS:-"-"}
-    WRITE_IOPS=${WRITE_IOPS:-"-"}
-
-    # Output to text
-    printf "| %-11s | %-10s | %-10s | %-9s | %-10s |\n" \
-        "$TEST" "$READ_BW" "$WRITE_BW" "$READ_IOPS" "$WRITE_IOPS" >> "$SUMMARY_TXT"
-
+    printf "| %-14s | %-10s | %-10s | %-9s | %-10s |\n" \
+        "$TEST" "${READ_BW:-0}" "${WRITE_BW:-0}" "${READ_IOPS:--}" "${WRITE_IOPS:--}" >> "$SUMMARY_TXT"
     $OUTPUT_CSV && echo "$TEST,$READ_BW,$WRITE_BW,$READ_IOPS,$WRITE_IOPS,$TEST_ABS_PATH,$TIMESTAMP,$PROFILE" >> "$SUMMARY_CSV"
-    $OUTPUT_MD && printf "| %-11s | %-10s | %-10s | %-9s | %-10s |\n" \
-        "$TEST" "$READ_BW" "$WRITE_BW" "$READ_IOPS" "$WRITE_IOPS" >> "$SUMMARY_MD"
+    $OUTPUT_MD && printf "| %-14s | %-10s | %-10s | %-9s | %-10s |\n" "$TEST" "$READ_BW" "$WRITE_BW" "$READ_IOPS" "$WRITE_IOPS" >> "$SUMMARY_MD"
     $OUTPUT_HTML && echo "<tr><td>$TEST</td><td>$READ_BW</td><td>$WRITE_BW</td><td>$READ_IOPS</td><td>$WRITE_IOPS</td></tr>" >> "$SUMMARY_HTML"
 }
 
-
-# === Execute and summarize ===
 run_profile
 for TEST in "${TEST_NAMES[@]}"; do
     parse_human_metrics "$TEST"
 done
 $OUTPUT_HTML && echo "</tbody></table>" >> "$SUMMARY_HTML"
 
-# === Cleanup ===
 echo -e "\n🧹 Cleaning up..." | tee -a "$LOG_FILE"
-rm -f "$TEST_FILE"
+rm -f "$TEST_DIR"/testfile-*.tmp
 echo "✅ Done." | tee -a "$LOG_FILE"
 echo
-
 cat "$SUMMARY_TXT"
-
 echo
 echo "📤 Output files generated (profile: $PROFILE):"
 echo "- Summary:      $SUMMARY_TXT"
@@ -227,4 +228,3 @@ $OUTPUT_CSV && echo "- CSV:          $SUMMARY_CSV"
 $OUTPUT_MD && echo "- Markdown:     $SUMMARY_MD"
 $OUTPUT_HTML && echo "- HTML:         $SUMMARY_HTML"
 echo "- Raw fio log:  $LOG_FILE"
-echo
