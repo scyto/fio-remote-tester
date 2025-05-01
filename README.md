@@ -54,8 +54,8 @@ You can specify the following `--profiles` if no profile is specified then defau
 
 ### Markdown Table
 
-| Test          | Read MB/s | Write MB/s | Read IOPS | Write IOPS |
-|---------------|-----------|------------|-----------|------------|
+| Test         | Read MB/s | Write MB/s | Read IOPS | Write IOPS |
+|--------------|-----------|------------|-----------|------------|
 | seqwrite-1M  | 310MiB/s  | 0          | -         | 310        |
 | seqread-1M   | 420MiB/s  | 0          | 420       | -          |
 | randrw-4k    | 12MiB/s   | 11MiB/s    | 3000      | 2800       |

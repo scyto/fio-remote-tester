@@ -13,7 +13,8 @@ Examples:
 
 Options:
   --profile default|balanced|vm|webserver|stress  Select a predefined I/O workload profile
-  --output csv markdown html                      Output one or more formats
+  --output csv markdown html none                 Output one or more formats,
+                                                 'all' for all formats, 'none' to disable file output
   --clear-cache                                   Clear Linux disk caches before each test (requires root)
   -h, --help                                      Show this help message
 EOF
@@ -39,6 +40,7 @@ shift
 OUTPUT_CSV=false
 OUTPUT_MD=false
 OUTPUT_HTML=false
+OUTPUT_NONE=false
 CLEAR_CACHE=false
 PROFILE="default"
 
@@ -54,13 +56,18 @@ while [[ "$#" -gt 0 ]]; do
                     OUTPUT_CSV=true
                     OUTPUT_MD=true
                     OUTPUT_HTML=true
+                elif [[ "$1" == "none" ]]; then
+                    OUTPUT_CSV=false
+                    OUTPUT_MD=false
+                    OUTPUT_HTML=false
+                    OUTPUT_NONE=true
                 elif [[ " ${VALID_OUTPUTS[*]} " =~ " $1 " ]]; then
                     [[ "$1" == "csv" ]] && OUTPUT_CSV=true
                     [[ "$1" == "markdown" ]] && OUTPUT_MD=true
                     [[ "$1" == "html" ]] && OUTPUT_HTML=true
                 else
                     echo "❌ Unknown output format: $1"
-                    echo "✅ Valid output formats: ${VALID_OUTPUTS[*]} or 'all'"
+                    echo "✅ Valid output formats: ${VALID_OUTPUTS[*]} or 'all' or 'none'"
                     exit 1
                 fi
                 shift
@@ -240,3 +247,9 @@ $OUTPUT_CSV && echo "- CSV:          $SUMMARY_CSV"
 $OUTPUT_MD && echo "- Markdown:     $SUMMARY_MD"
 $OUTPUT_HTML && echo "- HTML:         $SUMMARY_HTML"
 echo "- Raw fio log:  $LOG_FILE"
+
+#=== Delete log and summary files if --output none was specified ===
+if [[ "$OUTPUT_NONE" == true ]]; then
+    echo "🗑️ Deleting log and summary files as '--output none' was specified."
+    rm -f "$LOG_FILE" "$SUMMARY_TXT"
+fi
