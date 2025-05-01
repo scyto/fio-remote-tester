@@ -6,7 +6,7 @@ cat <<EOF
 📘 FIO I/O Tester
 
 Usage:
-  ./io-test.sh /path/to/mount --profile [default|balanced|vm|webserver|stress] --output [csv markdown html] [--clear-cache]
+  ./io-test.sh /path/to/mount --profile [default|balanced|vm|webserver|stress] --output [csv markdown html all] [--clear-cache]
 
 Examples:
   ./io-test.sh ./mnt/share --profile vm --output markdown --clear-cache
@@ -50,13 +50,17 @@ while [[ "$#" -gt 0 ]]; do
         --output)
             shift
             while [[ "$#" -gt 0 && ! "$1" =~ ^-- ]]; do
-                if [[ " ${VALID_OUTPUTS[*]} " =~ " $1 " ]]; then
+                if [[ "$1" == "all" ]]; then
+                    OUTPUT_CSV=true
+                    OUTPUT_MD=true
+                    OUTPUT_HTML=true
+                elif [[ " ${VALID_OUTPUTS[*]} " =~ " $1 " ]]; then
                     [[ "$1" == "csv" ]] && OUTPUT_CSV=true
                     [[ "$1" == "markdown" ]] && OUTPUT_MD=true
                     [[ "$1" == "html" ]] && OUTPUT_HTML=true
                 else
                     echo "❌ Unknown output format: $1"
-                    echo "✅ Valid output formats: ${VALID_OUTPUTS[*]}"
+                    echo "✅ Valid output formats: ${VALID_OUTPUTS[*]} or 'all'"
                     exit 1
                 fi
                 shift

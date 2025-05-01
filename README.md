@@ -6,7 +6,7 @@ A flexible and cache-aware benchmark script for storage shares using `fio`.
 
 - Multiple workload profiles: `default`, `balanced`, `vm`, `webserver`, `stress`
 - Automatically clears disk caches if `--clear-cache` is set
-- Outputs in CSV, Markdown, and HTML
+- Outputs in `CSV`, `Markdown`, and `HTML` or `all`
 - Detects and filters test metrics based on access mode (read/write)
 
 ## 🔧 Requirements & Install
