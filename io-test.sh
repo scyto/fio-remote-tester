@@ -3,7 +3,7 @@
 # === Help message ===
 show_help() {
 cat <<EOF
-📘 FIO Remote Share I/O Tester
+📘 FIO I/O Tester
 
 Usage:
   ./io-test.sh /path/to/mount --profile [default|balanced|vm|webserver|stress] --output [csv markdown html] [--clear-cache]
@@ -20,10 +20,12 @@ EOF
 }
 
 # === Handle help or missing path ===
-if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-    show_help
-    exit 0
-fi
+for arg in "$@"; do
+    if [[ "$arg" == "--help" || "$arg" == "-h" ]]; then
+        show_help
+        exit 0
+    fi
+done
 
 if [[ -z "$1" || "$1" =~ ^-- ]]; then
     echo "❌ Error: Missing test path."
