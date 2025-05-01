@@ -1,0 +1,11 @@
+📊 FIO Summary
+🕒 Timestamp: 2025-04-30_18-06-54
+📂 Tested path: /Users/alex/repos/fio-test-script
+📄 Profile: vm
+
+| Test           | Read MB/s  | Write MB/s | Read IOPS | Write IOPS |
+|----------------|------------|------------|-----------|------------|
+| randread-8k    | 242MiB/s   | 0          | 30.9k     | -          |
+| randwrite-8k   | 0          | 88.4MiB/s  | -         | 11.3k      |
+| randrw-16k     | 237MiB/s   | 101MiB/s   | 15.2k     | 6490       |
+| seqread-1M     | 4031MiB/s  | 0          | 4031      | -          |
