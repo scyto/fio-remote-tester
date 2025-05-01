@@ -85,6 +85,12 @@ while [[ "$#" -gt 0 ]]; do
     esac
 done
 
+# === check for sudo if --clear-cache is set ===
+if $CLEAR_CACHE && [[ "$EUID" -ne 0 ]]; then
+    echo "❌ Error: The --clear-cache option requires root privileges."
+    echo "✅ Please run the script with sudo: sudo ./io-test.sh ..."
+    exit 1
+fi
 
 TIMESTAMP=$(date '+%Y-%m-%d_%H-%M-%S')
 TEST_ABS_PATH=$(realpath "$TEST_DIR")

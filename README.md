@@ -9,10 +9,14 @@ A flexible and cache-aware benchmark script for storage shares using `fio`.
 - Outputs in CSV, Markdown, and HTML
 - Detects and filters test metrics based on access mode (read/write)
 
-## 🔧 Requirements
+## 🔧 Requirements & Install
 
 - Linux system with `fio` installed
 - Run as root if using `--clear-cache`
+- Dowload and set executable
+```
+cd ~ && wget https://raw.githubusercontent.com/scyto/fio-test-script/refs/heads/main/io-test.sh && chmod +x io-test.sh
+```
 - Download and remember to `chmod +x io-test.sh`
 
 ## 🧪 Example Usage
