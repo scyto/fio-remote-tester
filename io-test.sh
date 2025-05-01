@@ -13,9 +13,8 @@ Examples:
 
 Options:
   --profile default|balanced|vm|webserver|stress  Select a predefined I/O workload profile
-  --output csv markdown html none                 Output one or more formats,
-                                                 'all' for all formats, 'none' to disable file output
-  --clear-cache                                   Clear Linux disk caches before each test (requires root)
+  --output csv markdown html none                 Output one or more formats or 'all' for all formats, 'none' to disable file output
+  --clear-cache                                   Runs FIO tests with '--direct=1', '--invlidate=1' and clears Linux disk caches before each test (requires root)
   -h, --help                                      Show this help message
 EOF
 }
@@ -138,9 +137,24 @@ run_test() {
     local FILE="$TEST_DIR/testfile-$NAME.tmp"
     shift
     TEST_NAMES+=("$NAME")
+
     $CLEAR_CACHE && clear_caches
+
     echo "🚀 Running: $NAME" | tee -a "$LOG_FILE"
-    fio --name="$NAME" --filename="$FILE" --size=512M --overwrite=1 --output-format=normal "$@" >> "$LOG_FILE" 2>&1
+
+    local FIO_ARGS=(
+        --name="$NAME"
+        --filename="$FILE"
+        --size=512M
+        --overwrite=1
+        --output-format=normal
+    )
+
+    if $CLEAR_CACHE; then
+        FIO_ARGS+=(--direct=1 --invalidate=1)
+    fi
+
+    fio "${FIO_ARGS[@]}" "$@" >> "$LOG_FILE" 2>&1
     echo | tee -a "$LOG_FILE"
 }
 
@@ -149,29 +163,29 @@ run_profile() {
         default)
             run_test seqwrite-1M --rw=write --bs=1M --iodepth=1 --direct=1
             run_test seqread-1M  --rw=read  --bs=1M --iodepth=1 --direct=1
-            run_test randrw-4k   --rw=randrw --bs=4k --rwmixread=70 --iodepth=4 --direct=1
+            run_test randrw-4k   --rw=randrw --bs=4k --rwmixread=70 --iodepth=4 
             ;;
         balanced)
             run_test seqwrite-1M --rw=write --bs=1M --iodepth=2 --direct=1
             run_test randread-4k --rw=randread --bs=4k --iodepth=16 --direct=1
-            run_test randrw-16k  --rw=randrw --bs=16k --rwmixread=70 --iodepth=8 --direct=1
+            run_test randrw-16k  --rw=randrw --bs=16k --rwmixread=70 --iodepth=8 
             run_test seqread-4M  --rw=read --bs=4M --iodepth=2 --direct=1
             ;;
         vm)
             run_test randread-8k  --rw=randread --bs=8k  --iodepth=32 --direct=1
             run_test randwrite-8k --rw=randwrite --bs=8k  --iodepth=32 --direct=1
-            run_test randrw-16k   --rw=randrw --bs=16k --rwmixread=70 --iodepth=16 --direct=1
+            run_test randrw-16k   --rw=randrw --bs=16k --rwmixread=70 --iodepth=16 
             run_test seqread-1M   --rw=read --bs=1M  --iodepth=2 --direct=1
             ;;
         webserver)
             run_test randread-4k  --rw=randread --bs=4k  --iodepth=64 --direct=1
             run_test randwrite-4k --rw=randwrite --bs=4k  --iodepth=64 --direct=1
-            run_test randrw-16k   --rw=randrw --bs=16k --rwmixread=90 --iodepth=32 --direct=1
+            run_test randrw-16k   --rw=randrw --bs=16k --rwmixread=90 --iodepth=32 
             run_test seqread-512k --rw=read --bs=512k --iodepth=4 --direct=1
             ;;
         stress)
-            run_test randrw-4k    --rw=randrw --bs=4k --rwmixread=50 --iodepth=64 --direct=1
-            run_test randrw-64k   --rw=randrw --bs=64k --rwmixread=50 --iodepth=64 --direct=1
+            run_test randrw-4k    --rw=randrw --bs=4k --rwmixread=50 --iodepth=64 
+            run_test randrw-64k   --rw=randrw --bs=64k --rwmixread=50 --iodepth=64 
             run_test randwrite-1M --rw=randwrite --bs=1M --iodepth=32 --direct=1
             run_test randread-1M  --rw=randread  --bs=1M --iodepth=32 --direct=1
             ;;
