@@ -32,7 +32,7 @@ cd ~ && wget https://raw.githubusercontent.com/scyto/fio-test-script/refs/heads/
 |-------------------|--------------------------------------------------|
 | `--profile`       | Selects which profile directory of tests to run (see bellow) |
 | `--output`        | One or more output formats: `html`, `markdown`, `csv`. |
-| `--clear-cache`   | Clears Linux disk caches between each test.      |
+| `--clear-cache`   | Clears Linux disk caches between each test.<br> and runs each FIO tests with `--direct=1`, `--invlidate=1`    |
 
 > ⚠️ `--clear-cache` requires root privileges (`sudo`).
 
