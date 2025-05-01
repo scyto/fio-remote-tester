@@ -69,3 +69,32 @@ seqread-1M,420MiB/s,0,420,-,/mnt/test,2025-04-30_17-00-00,default
 randrw-4k,12MiB/s,11MiB/s,3000,2800,/mnt/test,2025-04-30_17-00-00,default
 ```
 
+# 📝 Output Files Created by `io-test.sh` In Detail
+
+When the script runs, it generates a set of output files summarizing the test results. These files are named using a timestamp for uniqueness and traceability.
+
+## 🗂️ File Summary
+
+| Filename Example                             | Description                                                      | Created When                |
+|---------------------------------------------|------------------------------------------------------------------|-----------------------------|
+| `fio-results-2025-04-30_15-45-30.log`        | **Raw log** of all `fio` test runs, full output per test         | Always                      |
+| `fio-summary-2025-04-30_15-45-30.txt`        | **Human-readable summary** in plain text with aligned columns    | Always                      |
+| `fio-summary-2025-04-30_15-45-30.csv`        | Summary in **CSV format** for spreadsheets or scripting          | If `--output csv` or `all` |
+| `fio-summary-2025-04-30_15-45-30.md`         | Summary in **Markdown table** format                             | If `--output markdown` or `all` |
+| `fio-summary-2025-04-30_15-45-30.html`       | Summary in **HTML table** format for web display                 | If `--output html` or `all` |
+
+## 🧹 Optional Cleanup
+
+If the `--output none` flag is used:
+
+- All of the above files will be **deleted at the end of the run**
+- A message will confirm:
+  ```
+  🗑️ Deleting log and summary files as '--output none' was specified.
+  ```
+
+## 📌 Notes
+
+- Timestamp format: `YYYY-MM-DD_HH-MM-SS`
+- Files are created in the **current working directory** (not the test target directory)
+- The test files themselves (`testfile-*.tmp`) are automatically removed after each run
