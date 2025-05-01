@@ -161,33 +161,33 @@ run_test() {
 run_profile() {
     case "$PROFILE" in
         default)
-            run_test seqwrite-1M --rw=write --bs=1M --iodepth=1 --direct=1
-            run_test seqread-1M  --rw=read  --bs=1M --iodepth=1 --direct=1
-            run_test randrw-4k   --rw=randrw --bs=4k --rwmixread=70 --iodepth=4 
+            run_test seqwrite-1M --rw=write    --bs=1M  --iodepth=1  --ioengine=libaio --time_based --runtime=30 
+            run_test seqread-1M  --rw=read     --bs=1M  --iodepth=1  --ioengine=libaio --time_based --runtime=30 
+            run_test randrw-4k   --rw=randrw   --bs=4k  --rwmixread=70 --iodepth=4  --ioengine=libaio --time_based --runtime=30 
             ;;
         balanced)
-            run_test seqwrite-1M --rw=write --bs=1M --iodepth=2 --direct=1
-            run_test randread-4k --rw=randread --bs=4k --iodepth=16 --direct=1
-            run_test randrw-16k  --rw=randrw --bs=16k --rwmixread=70 --iodepth=8 
-            run_test seqread-4M  --rw=read --bs=4M --iodepth=2 --direct=1
+            run_test seqwrite-1M --rw=write    --bs=1M  --iodepth=2  --ioengine=libaio --time_based --runtime=30 
+            run_test randread-4k --rw=randread --bs=4k  --iodepth=16 --ioengine=libaio --time_based --runtime=30 
+            run_test randrw-16k  --rw=randrw   --bs=16k --rwmixread=70 --iodepth=8 --ioengine=libaio --time_based --runtime=30
+            run_test seqread-4M  --rw=read     --bs=4M  --iodepth=2  --ioengine=libaio --time_based --runtime=30 
             ;;
         vm)
-            run_test randread-8k  --rw=randread --bs=8k  --iodepth=32 --direct=1
-            run_test randwrite-8k --rw=randwrite --bs=8k  --iodepth=32 --direct=1
-            run_test randrw-16k   --rw=randrw --bs=16k --rwmixread=70 --iodepth=16 
-            run_test seqread-1M   --rw=read --bs=1M  --iodepth=2 --direct=1
+            run_test randread-8k   --rw=randread  --bs=8k  --iodepth=32 --ioengine=libaio --time_based --runtime=30 
+            run_test randwrite-8k  --rw=randwrite --bs=8k  --iodepth=32 --ioengine=libaio --time_based --runtime=30 
+            run_test randrw-16k    --rw=randrw    --bs=16k --rwmixread=70 --iodepth=16 --ioengine=libaio --time_based --runtime=30 
+            run_test seqread-1M    --rw=read      --bs=1M  --iodepth=2  --ioengine=libaio --time_based --runtime=30 
             ;;
         webserver)
-            run_test randread-4k  --rw=randread --bs=4k  --iodepth=64 --direct=1
-            run_test randwrite-4k --rw=randwrite --bs=4k  --iodepth=64 --direct=1
-            run_test randrw-16k   --rw=randrw --bs=16k --rwmixread=90 --iodepth=32 
-            run_test seqread-512k --rw=read --bs=512k --iodepth=4 --direct=1
+            run_test randread-4k   --rw=randread  --bs=4k  --iodepth=64 --ioengine=libaio --time_based --runtime=30 
+            run_test randwrite-4k  --rw=randwrite --bs=4k  --iodepth=64 --ioengine=libaio --time_based --runtime=30 
+            run_test randrw-16k    --rw=randrw    --bs=16k --rwmixread=90 --iodepth=32 --ioengine=libaio --time_based --runtime=30
+            run_test seqread-512k  --rw=read      --bs=512k --iodepth=4 --ioengine=libaio --time_based --runtime=30 
             ;;
         stress)
-            run_test randrw-4k    --rw=randrw --bs=4k --rwmixread=50 --iodepth=64 
-            run_test randrw-64k   --rw=randrw --bs=64k --rwmixread=50 --iodepth=64 
-            run_test randwrite-1M --rw=randwrite --bs=1M --iodepth=32 --direct=1
-            run_test randread-1M  --rw=randread  --bs=1M --iodepth=32 --direct=1
+            run_test randrw-4k     --rw=randrw    --bs=4k   --rwmixread=50 --iodepth=64 --ioengine=libaio --time_based --runtime=30 
+            run_test randrw-64k    --rw=randrw    --bs=64k  --rwmixread=50 --iodepth=64 --ioengine=libaio --time_based --runtime=30 
+            run_test randwrite-1M  --rw=randwrite --bs=1M   --iodepth=32 --ioengine=libaio --time_based --runtime=30 
+            run_test randread-1M   --rw=randread  --bs=1M   --iodepth=32 --ioengine=libaio --time_based --runtime=30 
             ;;
     esac
 }
