@@ -104,11 +104,11 @@ fi
 
 TIMESTAMP=$(date '+%Y-%m-%d_%H-%M-%S')
 TEST_ABS_PATH=$(realpath "$TEST_DIR")
-LOG_FILE="fio-results-$TIMESTAMP.log"
-SUMMARY_TXT="fio-summary-$TIMESTAMP.txt"
-SUMMARY_CSV="fio-summary-$TIMESTAMP.csv"
-SUMMARY_MD="fio-summary-$TIMESTAMP.md"
-SUMMARY_HTML="fio-summary-$TIMESTAMP.html"
+LOG_FILE="$PWD/fio-results-$TIMESTAMP.log"
+SUMMARY_TXT="$PWD/fio-summary-$TIMESTAMP.txt"
+SUMMARY_CSV="$PWD/fio-summary-$TIMESTAMP.csv"
+SUMMARY_MD="$PWD/fio-summary-$TIMESTAMP.md"
+SUMMARY_HTML="$PWD/fio-summary-$TIMESTAMP.html"
 
 echo "📁 Running tests in: $TEST_ABS_PATH" | tee "$LOG_FILE"
 echo "🧪 Temporary test files in: $TEST_ABS_PATH" | tee -a "$LOG_FILE"
