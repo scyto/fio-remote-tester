@@ -154,6 +154,7 @@ run_test() {
         FIO_ARGS+=(--direct=1 --invalidate=1)
     fi
 
+    # Explicitly expand user args *after* FIO_ARGS so they take effect
     fio "${FIO_ARGS[@]}" "$@" >> "$LOG_FILE" 2>&1
     echo | tee -a "$LOG_FILE"
 }
@@ -167,7 +168,7 @@ run_profile() {
             ;;
         balanced)
             run_test seqwrite-1M --rw=write    --bs=1M  --iodepth=2  --ioengine=libaio --time_based --runtime=30 
-            run_test randread-4k --rw=randread --bs=4k  --iodepth=16 --ioengine=libaio --time_based --runtime=30 
+            run_test randread-4k --rw=randread --bs=4k  --iodepth=16 --ioengine=libaio --time_based --runtime=30 --direct=1
             run_test randrw-16k  --rw=randrw   --bs=16k --rwmixread=70 --iodepth=8 --ioengine=libaio --time_based --runtime=30
             run_test seqread-4M  --rw=read     --bs=4M  --iodepth=2  --ioengine=libaio --time_based --runtime=30 
             ;;
