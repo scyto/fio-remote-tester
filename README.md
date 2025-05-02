@@ -2,6 +2,11 @@
 
 A flexible and cache-aware benchmark script for storage shares using `fio`.
 
+## Warning
+This script uses FIO in file mode so it writes a file to a directory path and uses that to test.  This should be non destructive to the disk you are testing.
+But this is a disk benchmark and I make no promises about what it does - be sure to test on a non-critical directory location first before you use this.
+Without you specifiying a patth to test this script will perform no actions.
+
 ## ✅ Features
 
 - Multiple workload profiles: `default`, `balanced`, `vm`, `webserver`, `stress`
