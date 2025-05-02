@@ -283,3 +283,8 @@ if [[ "$OUTPUT_NONE" == true ]]; then
     echo "🗑️ Deleting log and summary files as '--output none' was specified."
     rm -f "$LOG_FILE" "$SUMMARY_TXT"
 fi
+
+# Copyright (c) 2025 Alex Balcanquall
+# 
+# This software is licensed under the MIT License.
+# See the LICENSE file in the repository root for full license text.
